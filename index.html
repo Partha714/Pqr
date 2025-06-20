@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Happy Birthday</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0b0b0b;
+      height: 100%;
+      width: 100%;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+    }
+    .overlay-text {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #ff8bd8;
+      font-size: 5vw;
+      z-index: 10;
+      pointer-events: none;
+      text-shadow: 0 0 5px #ff1493, 0 0 10px #ff69b4;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-text">🎉 Happy Birthday, Ankita! 🎉</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let W, H;
+    const dots = [];
+    const sparkles = [];
+    const message = "Happy Birthday Ankita!";
+
+    function resizeCanvas() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W;
+      canvas.height = H;
+    }
+
+    function createTextPoints() {
+      ctx.clearRect(0, 0, W, H);
+      const fontSize = W < 500 ? 35 : 70;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillStyle = "white";
+      ctx.fillText(message, W / 2, H / 2);
+
+      const data = ctx.getImageData(0, 0, W, H).data;
+      const points = [];
+      const gap = W < 500 ? 7 : 6;
+
+      for (let y = 0; y < H; y += gap) {
+        for (let x = 0; x < W; x += gap) {
+          const index = (y * W + x) * 4;
+          if (data[index + 3] > 128) {
+            points.push({ x, y });
+          }
+        }
+      }
+
+      return points;
+    }
+
+    function initDots(points) {
+      dots.length = 0;
+      for (let p of points) {
+        dots.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          tx: p.x,
+          ty: p.y,
+          color: `hsl(${Math.random() * 360}, 100%, 70%)`,
+        });
+      }
+    }
+
+    function initSparkles(count = 80) {
+      sparkles.length = 0;
+      for (let i = 0; i < count; i++) {
+        sparkles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 1.5 + 0.5,
+          a: Math.random(),
+          dx: (Math.random() - 0.5) * 0.3,
+          dy: (Math.random() - 0.5) * 0.3,
+        });
+      }
+    }
+
+    function drawSparkles() {
+      for (let s of sparkles) {
+        s.x += s.dx;
+        s.y += s.dy;
+        s.a += (Math.random() - 0.5) * 0.05;
+        s.a = Math.max(0.1, Math.min(1, s.a));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "#ffffff";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+
+      drawSparkles();
+
+      for (let dot of dots) {
+        dot.x += (dot.tx - dot.x) * 0.08;
+        dot.y += (dot.ty - dot.y) * 0.08;
+
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = dot.color;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = dot.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function startAnimation() {
+      resizeCanvas();
+      const points = createTextPoints();
+      initDots(points);
+      initSparkles();
+      animate();
+    }
+
+    window.addEventListener("resize", () => {
+      startAnimation();
+    });
+
+    window.onload = startAnimation;
+  </script>
+</body>
+</html>
